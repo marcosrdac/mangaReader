@@ -5,7 +5,7 @@ import urllib.request
 import urllib.parse
 
 
-def download(url, encodingValues={}):
+def getFromURL(url, encodingValues={}):
     data = urllib.parse.urlencode(encodingValues)
     data = data.encode('utf-8')
     req = urllib.request.Request(url, data)
@@ -20,5 +20,5 @@ def download(url, encodingValues={}):
 
 if __name__ == '__main__':
     arq = open('arq.html', 'w')
-    arq.write(download(input('Type the URL: ')))
+    arq.write(getFromURL(input('Type the URL: ')))
     arq.close()
