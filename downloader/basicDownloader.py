@@ -44,7 +44,7 @@ class Downloader():
             return(respData)
 
     def downloadAsString(self):
-        respData = self.getAsBytes()
+        respData = self.download()
         respData = respData.decode(self.textEncoding, 'ignore')
         self.contents = respData
         return(respData)
