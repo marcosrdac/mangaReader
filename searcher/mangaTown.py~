@@ -11,19 +11,15 @@ def _test():
     print('\n')
     try:
         search = mangaTownBrowser(manga)
-        search.getResults()
-        manga = search.getChosenManga(1)
-        for i in ['title',
-                  'alternative titles',
-                  'style',
-                  'genres',
-                  'author',
-                  'artist',
-                  'status',
-                  'rank',
-                  'summary']:
-            print(i.capitalize() + ': ' + manga[i])
-
+        results = search.getResults('full')
+    #    for i in results:
+    #        for j in ['title',
+    #                  'url',
+    #                  'cover link']:
+    #            print(j.capitalize() + ': ' + i[j])
+    #        print('\n')
+        print('Number of results: %i' % len(results))
+        print(search.getChosenMangaInfo(1))
     except mangaNotFound:
         print('Could not find the manga you typed.')
 
@@ -37,7 +33,7 @@ class mangaTownBrowser:
         self.searchUrl = 'http://www.mangatown.com/search.php'
         self.textEncoding = 'utf-8'
         self.results = []
-        self.manga = {}
+        self.chosenManga = {}
 
     def getSearchPage(self, page=1):
         searchValues = {'name': self.search,
@@ -104,9 +100,12 @@ class mangaTownBrowser:
         return(mangas)
 
     # --------------------------------------------------------------------------
-    def getChosenManga(self, mangaNumber):
-        manga = self.results[mangaNumber-1]
-        url = manga['url']
+
+    def getChosenMangaInfo(self, mangaNumber):
+        mangaInfo = self.results[mangaNumber-1]
+        title = mangaInfo['title']
+        url = mangaInfo['url']
+        coverLink = mangaInfo['cover link']
 
         page = bd.Downloader(url)
         page = page.downloadAsString()
@@ -118,13 +117,9 @@ class mangaTownBrowser:
                                        r'(.*?)</li>',
                                        infoList,
                                        re.S | re.I)[0]
-        manga['alternative titles'] = alternativeTitles
-
         style = re.findall(r'<li><b>Demographic:</b><.*?>(.*?)</a></li>',
                            infoList,
                            re.S | re.I)[0]
-        manga['style'] = style
-
         genresElement = re.findall(r'<li><b>Genre\(s\):</b>(.*?)</li>',
                                    infoList,
                                    re.S | re.I)[0]
@@ -132,18 +127,12 @@ class mangaTownBrowser:
                             genresElement,
                             re.S | re.I)
         genres = '; '.join(genres) + '.'
-        manga['genres'] = genres
-
         author = re.findall(r'<li><b>Author\(s\):</b><.*?>(.*?)</a></li>',
                             infoList,
-                            re.S | re.I)[0]
-        manga['author'] = author
-
+                            re.S | re.I)
         artist = re.findall(r'<li><b>Artist\(s\):</b><.*?>(.*?)</a></li>',
                             infoList,
                             re.S | re.I)[0]
-        manga['artist'] = artist
-
         status = re.findall(r'<li><b>Status\(s\):</b>(.*?)</li>',
                             infoList,
                             re.S | re.I)[0]
@@ -152,42 +141,23 @@ class mangaTownBrowser:
                 status = 'In Release'
             else:
                 status = 'Incompleted'
-        manga['status'] = status
-
         rank = re.findall(r'<li><b>Rank:</b>(.*?)</li>',
                           infoList,
                           re.S | re.I)[0]
-        manga['rank'] = rank
-
         summary = re.findall(r'<b>Summary:</b>.*?<span id="show" style='
                              r'"display: none;">(.*?)&nbsp;<a.*?>',
                              infoList,
                              re.S | re.I)[0]
-        manga['summary'] = summary
-
         chapterListBox = re.findall(r'<ul class="chapter_list">(.*?)</ul>',
-                                    page,
+                                    infoList,
                                     re.S | re.I)[0]
+        chapterList = re.findall(r'',
+                                 chapterListBox,
+                                 re.S | re.I)[0]
 
-        listElements = re.findall(r'<li>(.*?)</li>',
-                                  chapterListBox,
-                                  re.S | re.I)
-        chapters = {}
-        for element in listElements:
-            url = re.findall(r'<a href="(.*?)".*>',
-                             element,
-                             re.S | re.I)[0]
-            number = re.findall(r'/c(\d*)',
-                                url,
-                                re.S | re.I)[0]
-            chapter = {number: url}
-            chapters = dict(list(chapters.items()) +
-                            list(chapter.items()))
-
-        manga['chapters'] = chapters
-
-        self.manga = manga
-        return(manga)
+        chosenManga = {}
+        self.chosenManga = chosenManga
+        return(chapterList)
 
 
 class mangaNotFound(Exception):
